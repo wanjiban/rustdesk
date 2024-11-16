@@ -283,6 +283,8 @@ def generate_control_file(version):
     system2('/bin/rm -rf %s' % control_file_path)
 
     content = """Package: rustdesk
+Section: net
+Priority: optional
 Version: %s
 Architecture: %s
 Maintainer: rustdesk <info@rustdesk.com>
@@ -332,8 +334,6 @@ def build_flutter_deb(version, features):
     system2(
         'cp ../res/rustdesk-link.desktop tmpdeb/usr/share/applications/rustdesk-link.desktop')
     system2(
-        'cp ../res/com.rustdesk.RustDesk.policy tmpdeb/usr/share/polkit-1/actions/')
-    system2(
         'cp ../res/startwm.sh tmpdeb/etc/rustdesk/')
     system2(
         'cp ../res/xorg.conf tmpdeb/etc/rustdesk/')
@@ -376,8 +376,6 @@ def build_deb_from_folder(version, binary_folder):
         'cp ../res/rustdesk.desktop tmpdeb/usr/share/applications/rustdesk.desktop')
     system2(
         'cp ../res/rustdesk-link.desktop tmpdeb/usr/share/applications/rustdesk-link.desktop')
-    system2(
-        'cp ../res/com.rustdesk.RustDesk.policy tmpdeb/usr/share/polkit-1/actions/')
     system2(
         "echo \"#!/bin/sh\" >> tmpdeb/usr/share/rustdesk/files/polkit && chmod a+x tmpdeb/usr/share/rustdesk/files/polkit")
 
