@@ -13,6 +13,8 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.content.ClipboardManager
+import android.os.Bundle
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
@@ -30,16 +32,15 @@ import com.hjq.permissions.XXPermissions
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
-import io.flutter.embedding.engine.plugins.FlutterPlugin
-import io.flutter.plugin.common.MethodCall
-import io.flutter.plugin.common.MethodChannel.MethodCallHandler
-import io.flutter.plugin.common.MethodChannel.Result
 import kotlin.concurrent.thread
 
 
 class MainActivity : FlutterActivity() {
     companion object {
         var flutterMethodChannel: MethodChannel? = null
+        private var _rdClipboardManager: RdClipboardManager? = null
+        val rdClipboardManager: RdClipboardManager?
+            get() = _rdClipboardManager;
     }
 
     private val channelTag = "mChannel"
@@ -61,7 +62,6 @@ class MainActivity : FlutterActivity() {
             channelTag
         )
         initFlutterChannel(flutterMethodChannel!!)
-        flutterEngine.plugins.add(ContextPlugin())
         thread { setCodecInfo() }
     }
 
@@ -87,6 +87,14 @@ class MainActivity : FlutterActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQ_INVOKE_PERMISSION_ACTIVITY_MEDIA_PROJECTION && resultCode == RES_FAILED) {
             flutterMethodChannel?.invokeMethod("on_media_projection_canceled", null)
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (_rdClipboardManager == null) {
+            _rdClipboardManager = RdClipboardManager(getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager)
+            FFI.setClipboardManager(_rdClipboardManager!!)
         }
     }
 
@@ -211,6 +219,10 @@ class MainActivity : FlutterActivity() {
                     }
                     result.success(true)
 
+                }
+                "try_sync_clipboard" -> {
+                    rdClipboardManager?.syncClipboard(true)
+                    result.success(true)
                 }
                 GET_START_ON_BOOT_OPT -> {
                     val prefs = getSharedPreferences(KEY_SHARED_PREFERENCES, MODE_PRIVATE)
@@ -392,18 +404,5 @@ class MainActivity : FlutterActivity() {
     override fun onStart() {
         super.onStart()
         stopService(Intent(this, FloatingWindowService::class.java))
-    }
-}
-
-// https://cjycode.com/flutter_rust_bridge/guides/how-to/ndk-init
-class ContextPlugin : FlutterPlugin, MethodCallHandler {
-    override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-        FFI.initContext(flutterPluginBinding.applicationContext)
-    }
-    override fun onMethodCall(call: MethodCall, result: Result) {
-        result.notImplemented()
-    }
-
-    override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
     }
 }
