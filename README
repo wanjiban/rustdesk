@@ -1,0 +1,3 @@
+# 拉取 hbb_common 仓库的 dev 分支更新时
+cd rustdesk
+git submodule update --remote libs/hbb_common
